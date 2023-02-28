@@ -1,0 +1,51 @@
+version: "3.8"
+
+# networks:
+#  default:
+#    external:
+#      name: network_ml
+networks:
+  network_ml:
+
+services:
+  mysqldb:
+    container_name: mysql_server
+    image: mysql/mysql-server:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password123
+    volumes:   
+      - ./var/lib/mysql-files:/var/lib/mysql-files/
+      - ./ml_space:/mysqldb
+    ports:
+      - '3305:3305'
+    networks:
+      - network_ml
+
+  spark:
+    container_name: ml_setup
+    image: jupyter/all-spark-notebook
+    depends_on:
+      - mysqldb
+    ports:
+      - '8888:8888'
+      - '4040:4040' 
+      - '4041:4041'
+    volumes:
+      - ./ml_space:/spark
+    networks:
+      - network_ml
+
+  sqlpad:
+    container_name: mysqlpad_ml
+    image: sqlpad/sqlpad:master
+    depends_on:
+      - mysqldb
+    environment:
+      SQLPAD_ADMIN: admin@sql.pad
+      SQLPAD_ADMIN_PASSWORD: password123
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./ml_space:/sqlpad
+    networks:
+      - network_ml
